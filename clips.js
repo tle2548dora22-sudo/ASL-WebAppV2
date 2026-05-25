@@ -18,7 +18,7 @@ const CLIPS = [
   // ═══════════════════════════════════════════════════════════
   {
     section: "ASL Lessons",
-    name: "ASL Tutorial 1",          // ← rename freely
+    name: "A - Z",          // ← rename freely
     url:  "https://youtu.be/rHUfMxe-9nc",
     type: "youtube",
   },
