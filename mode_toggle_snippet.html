@@ -1,0 +1,56 @@
+<!-- ════════════════════════════════════════════════
+     MODE TOGGLE — วางไว้ใน .controls ของ card กล้อง
+     (วางต่อจากปุ่ม startBtn / stopCamera)
+     ════════════════════════════════════════════════ -->
+
+<!-- ตัวอย่าง: แทนที่ block <div class="controls"> ใน card กล้อง -->
+<div class="controls">
+  <button id="startBtn" class="btn-green" onclick="startCamera()">▶ เริ่มกล้อง</button>
+  <button class="btn-red" onclick="stopCamera()">⏹ หยุดกล้อง</button>
+
+  <!-- MODE TOGGLE — เพิ่มส่วนนี้ -->
+  <div class="mode-toggle-group" style="display:inline-flex; gap:6px; align-items:center; margin-left:8px;">
+    <label style="font-size:0.8rem; color:var(--text-muted, #888);">โหมด:</label>
+    <button id="modeBtn-static"  class="btn-mode" onclick="setDetectionMode('static')" title="อ่านแค่ A–Z">🔤 A–Z</button>
+    <button id="modeBtn-dynamic" class="btn-mode" onclick="setDetectionMode('dynamic')" title="Dynamic gesture เท่านั้น">🤟 Dynamic</button>
+    <button id="modeBtn-both"    class="btn-mode btn-mode-active" onclick="setDetectionMode('both')" title="ทั้ง A–Z และ Dynamic">⚡ ทั้งสอง</button>
+  </div>
+</div>
+
+<!--
+  เพิ่ม CSS ต่อไปนี้ใน style.css:
+
+  .btn-mode {
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    border-radius: 6px;
+    border: 1.5px solid #444;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-mode:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+  }
+  .btn-mode-active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #fff;
+  }
+-->
+
+<script>
+// อัปเดต active state ของปุ่ม mode
+(function patchModeButtons() {
+  const orig = window.setDetectionMode;
+  window.setDetectionMode = function(mode) {
+    orig && orig(mode);
+    ['static','dynamic','both'].forEach(m => {
+      const btn = document.getElementById('modeBtn-' + m);
+      if (btn) btn.classList.toggle('btn-mode-active', m === mode);
+    });
+  };
+})();
+</script>

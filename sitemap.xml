@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!--
+    sitemap.xml — ASL Detector Web App
+    Place this file at the root of your static hosting.
+    Replace YOUR_DOMAIN with your actual domain before deploying.
+  -->
+
+  <!-- Main app page -->
+  <url>
+    <loc>https://YOUR_DOMAIN/</loc>
+    <lastmod>2025-01-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+</urlset>

@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>ASL Detector — Real-time Sign Language AI</title>
+  <meta name="description" content="Detect ASL hand signs in real-time with AI — supports A–Z and dynamic gestures via webcam." />
+  <meta property="og:title"       content="ASL Detector — Real-time Sign Language AI" />
+  <meta property="og:description" content="Detect ASL hand signs in real-time with AI — supports A–Z and dynamic gestures via webcam." />
+  <meta property="og:image"       content="logo.png" />
+  <meta property="og:type"        content="website" />
+  <meta name="twitter:card"       content="summary_large_image" />
+  <meta name="twitter:title"      content="ASL Detector — Real-time Sign Language AI" />
+  <meta name="twitter:description" content="Real-time ASL hand sign detection powered by AI" />
+  <meta name="twitter:image"      content="logo.png" />
+
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="apple-touch-icon"     href="logo.png" />
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; connect-src 'self' https:; img-src 'self' data: blob: https://img.youtube.com; media-src 'self' blob:; worker-src 'self' blob:; frame-src https://www.youtube.com https://youtu.be;" />
+
+  <!-- [4] DM Mono + DM Sans fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- [1] Tabler Icons CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- MediaPipe scripts are lazy-loaded in camera.js when Start Camera is clicked -->
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     [1] LANDING PAGE — shown before login
+     ══════════════════════════════════════════════ -->
+<div id="landingPage" style="display:none;">
+  <div class="landing-bg-blobs">
+    <div class="landing-blob" style="width:560px;height:560px;background:#1d4ed8;top:-140px;left:-120px;"></div>
+    <div class="landing-blob" style="width:420px;height:420px;background:#06b6d4;bottom:-100px;right:-80px;"></div>
+    <div class="landing-blob" style="width:300px;height:300px;background:#0ea5e9;top:60%;left:40%;"></div>
+  </div>
+
+  <div class="landing-inner">
+    <div class="landing-content">
+
+      <img
+        class="theme-logo landing-logo"
+        src="assets/logos/logo-dark.png"
+        data-logo-light="assets/logos/logo-dark.png"
+        data-logo-dark="assets/logos/logo-light.png"
+        alt="ASL Detector"
+      />
+
+      <!-- Tagline pill -->
+      <div class="landing-tagline-pill" aria-label="Tagline">
+        <span class="landing-tagline-dot" aria-hidden="true"></span>
+        AI-powered sign language detection for real-time learning and communication
+      </div>
+
+      <h1 class="landing-title">Understand Sign Language<br><span class="landing-title-accent">Instantly with AI</span></h1>
+
+      <p class="landing-desc">
+        Detect ASL hand signs A–Z and dynamic gestures in real-time — powered by MediaPipe and your webcam. No installs. No delays.
+      </p>
+
+      <!-- Feature badges -->
+      <div class="landing-features" role="list" aria-label="Key features">
+        <div class="landing-feature-item" role="listitem">
+          <i class="ti ti-camera" aria-hidden="true"></i>
+          <span>Webcam Detection</span>
+        </div>
+        <div class="landing-feature-item" role="listitem">
+          <i class="ti ti-bolt" aria-hidden="true"></i>
+          <span>Real-time AI</span>
+        </div>
+        <div class="landing-feature-item" role="listitem">
+          <i class="ti ti-alphabet-latin" aria-hidden="true"></i>
+          <span>Full A–Z Support</span>
+        </div>
+        <div class="landing-feature-item" role="listitem">
+          <i class="ti ti-shield-check" aria-hidden="true"></i>
+          <span>Privacy-First</span>
+        </div>
+      </div>
+
+      <button class="landing-cta" onclick="showLoginFromLanding()" aria-label="Get started - open login">
+        <span>Get Started Free</span>
+        <i class="ti ti-arrow-right landing-cta-arrow" aria-hidden="true"></i>
+      </button>
+
+      <div class="landing-demo-row">
+        <button class="btn-demo" onclick="handleEnterDemo()" aria-label="Try the app without creating an account">
+          <i class="ti ti-flask" aria-hidden="true"></i>
+          Try without account
+        </button>
+        <p class="landing-demo-note">No sign-up needed · Camera &amp; AI detection fully functional</p>
+      </div>
+
+      <p class="landing-sub">Already have an account? <a href="#" onclick="showLoginFromLanding()">Sign in</a></p>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     LOGIN OVERLAY
+     ══════════════════════════════════════════════ -->
+<div id="loginOverlay" style="display:none;" role="main" aria-label="Login">
+
+  <div class="login-blob" style="width:340px;height:340px;background:#1d4ed8;top:-80px;left:-80px;"></div>
+  <div class="login-blob" style="width:260px;height:260px;background:#06b6d4;bottom:-60px;right:-60px;"></div>
+  <div class="login-blob" style="width:200px;height:200px;background:#0ea5e9;top:58%;left:3%;"></div>
+
+  <div class="login-box">
+
+    <div class="login-logo-wrap">
+      <img
+        class="theme-logo login-logo-img"
+        src="assets/logos/logo-dark.png"
+        data-logo-light="assets/logos/logo-dark.png"
+        data-logo-dark="assets/logos/logo-light.png"
+        alt="ASL Detector Logo"
+      />
+      <p id="loginSubtitle">Sign in to continue</p>
+    </div>
+
+    <div class="login-field-group">
+      <label class="login-field-label" for="loginUsername">
+        <i class="ti ti-mail" aria-hidden="true"></i>
+        <span id="labelEmail">Email</span>
+      </label>
+      <div class="login-field-wrap">
+        <i class="ti ti-at login-field-icon" aria-hidden="true"></i>
+        <input id="loginUsername" class="login-field" type="email"
+               placeholder="example@email.com"
+               autocomplete="email"
+               aria-label="Email address"
+               onkeydown="if(event.key==='Enter') document.getElementById('loginPassword').focus()" />
+      </div>
+    </div>
+
+    <div class="login-field-group">
+      <label class="login-field-label" for="loginPassword">
+        <i class="ti ti-lock" aria-hidden="true"></i>
+        <span id="labelPassword">Password</span>
+      </label>
+      <div class="login-field-wrap">
+        <i class="ti ti-key login-field-icon" aria-hidden="true"></i>
+        <input id="loginPassword" class="login-field" type="password"
+               placeholder="Your password"
+               autocomplete="current-password"
+               aria-label="Password"
+               onkeydown="if(event.key==='Enter') handleLogin()" />
+      </div>
+    </div>
+
+    <div class="login-forgot">
+      <a href="#" id="loginForgotLink" onclick="event.preventDefault(); handleForgotPassword()">Forgot password?</a>
+    </div>
+
+    <button class="login-btn" onclick="handleLogin()" aria-label="Sign in">
+      <i class="ti ti-login" aria-hidden="true"></i>
+      <span id="loginBtnLabel">Log in</span>
+    </button>
+
+    <div id="loginError" role="alert"></div>
+
+    <div class="login-divider">
+      <div class="login-divider-line"></div>
+      <span class="login-divider-text" id="loginOrLabel">or</span>
+      <div class="login-divider-line"></div>
+    </div>
+
+    <button id="registerBtn" class="login-btn register-btn" onclick="handleRegister()" aria-label="Create account">
+      <i class="ti ti-user-plus" aria-hidden="true"></i>
+      <span id="registerBtnLabel">Create account</span>
+    </button>
+
+    <div class="login-hint" role="note">
+      <i class="ti ti-info-circle" aria-hidden="true"></i>
+      <span id="loginHintText">Sign in with your email and password. New here? Click <strong>Create account</strong>.</span>
+    </div>
+
+    <button class="btn-demo" onclick="handleEnterDemo()" aria-label="Try the app in demo mode without an account">
+      <i class="ti ti-flask" aria-hidden="true"></i>
+      Try without account — Demo Mode
+    </button>
+
+    <div class="login-badges" aria-label="App features">
+      <span class="login-badge"><i class="ti ti-shield-check" aria-hidden="true"></i><span id="badgeSafe">Secure</span></span>
+      <span class="login-badge"><i class="ti ti-hand-stop" aria-hidden="true"></i><span id="badgeASL">ASL Detection</span></span>
+      <span class="login-badge"><i class="ti ti-camera" aria-hidden="true"></i><span id="badgeRealtime">Real-time</span></span>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     APP SHELL
+     ══════════════════════════════════════════════ -->
+<div id="appShell" style="display:none;">
+
+  <!-- TOPBAR -->
+  <header class="topbar" role="banner">
+    <button class="topbar-toggle" onclick="toggleNav()" aria-label="Toggle navigation sidebar">
+      <span class="toggle-bars" aria-hidden="true">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </span>
+    </button>
+
+    <div class="topbar-logo">
+      <img
+        class="theme-logo topbar-logo-img"
+        src="assets/logos/logo-dark.png"
+        data-logo-light="assets/logos/logo-dark.png"
+        data-logo-dark="assets/logos/logo-light.png"
+        alt="ASL Detector"
+      />
+    </div>
+
+    <div class="topbar-right">
+      <span class="badge" id="systemBadge">Ready</span>
+      <!-- Dark Mode Toggle -->
+      <button class="dark-toggle-btn" id="darkToggleBtn" onclick="toggleDarkMode()" aria-label="Toggle dark mode" title="Dark mode">
+        <i class="ti ti-moon" id="darkToggleIcon" aria-hidden="true"></i>
+      </button>
+      <div class="user-chip" aria-live="polite">
+        <i class="ti ti-user-circle" aria-hidden="true"></i>
+        <span id="loggedInUser"></span>
+      </div>
+      <button class="btn-logout btn-danger-outline" onclick="doLogout()" aria-label="Logout from the application" id="btnLogoutLabel">
+        <i class="ti ti-logout" aria-hidden="true"></i>
+        <span>Log out</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="nav-backdrop" id="navBackdrop" aria-hidden="true"></div>
+
+  <!-- SIDENAV -->
+  <nav class="sidenav" id="sidenav" aria-label="Main navigation">
+    <div class="nav-section-label" id="navSectionMain">Menu</div>
+
+    <div class="nav-item active" id="nav-home" onclick="goPage('home')" role="button" tabindex="0" aria-label="Go to Home page" onkeydown="if(event.key==='Enter'||event.key===' ')goPage('home')">
+      <i class="ti ti-home nav-icon" aria-hidden="true"></i>
+      <span class="nav-label" id="navLabelHome">Home</span>
+      <span class="nav-tooltip" aria-hidden="true">Home</span>
+    </div>
+
+    <div class="nav-item" id="nav-clips" onclick="goPage('clips')" role="button" tabindex="0" aria-label="Go to ASL Tutorial Clips" onkeydown="if(event.key==='Enter'||event.key===' ')goPage('clips')">
+      <i class="ti ti-movie nav-icon" aria-hidden="true"></i>
+      <span class="nav-label" id="navLabelClips">ASL Tutorial Clips</span>
+      <span class="nav-badge" id="clipCountBadge" aria-label="Number of clips">0</span>
+      <span class="nav-tooltip" aria-hidden="true">ASL Tutorial Clips</span>
+    </div>
+
+    <div class="nav-divider" role="separator"></div>
+
+
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main" id="mainContent" role="main">
+
+    <!-- ── HOME PAGE ── -->
+    <div class="page active" id="page-home">
+
+      <!-- Camera Permission Overlay -->
+      <div class="overlay" id="permissionOverlay" role="dialog" aria-modal="true" aria-label="Camera permission request">
+        <div class="modal">
+          <i class="ti ti-camera modal-icon" aria-hidden="true"></i>
+          <h2 id="permTitle">Camera Permission</h2>
+          <p id="permBody">This app needs camera access to detect ASL hand signs.<br>Please click <strong>"Allow"</strong> when prompted by your browser.</p>
+          <button class="btn-primary" onclick="startCameraFromOverlay()" aria-label="Start camera and grant permission" id="btnStartCameraOverlay">
+            <i class="ti ti-camera" aria-hidden="true"></i>
+            Start Camera
+          </button>
+        </div>
+      </div>
+
+      <!-- [8] Warm-up status bar -->
+      <div class="warmup-bar" id="warmupBar" style="display:none;" role="status" aria-live="polite">
+        <i class="ti ti-server" aria-hidden="true"></i>
+        <span id="warmupText">Warming up AI server…</span>
+        <div class="warmup-spinner" aria-hidden="true"></div>
+      </div>
+
+      <!-- ── Floating Result Bar (mobile only) ── -->
+      <div class="floating-result-bar" id="floatingResultBar" aria-live="assertive" aria-label="Detection result">
+        <div class="frb-letter-wrap">
+          <span class="frb-label" id="frbLabel">Letter</span>
+          <span class="frb-letter" id="frbLetter">-</span>
+        </div>
+        <div class="frb-divider" aria-hidden="true"></div>
+        <div class="frb-confidence-wrap">
+          <span class="frb-conf-text" id="frbConf">Confidence: -</span>
+          <div class="frb-bar-track" id="frbBarTrack" style="display:none;">
+            <div class="frb-bar-fill" id="frbBarFill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layout">
+        <!-- Camera Column -->
+        <div>
+          <div class="card">
+            <!-- [6] Camera skeleton loading -->
+            <div class="camera-skeleton" id="cameraSkeleton" aria-label="Camera loading" aria-hidden="true">
+              <div class="skeleton-shimmer"></div>
+              <div class="skeleton-camera-icon" aria-hidden="true">
+                <i class="ti ti-camera-off"></i>
+              </div>
+            </div>
+
+            <div class="camera-box" role="img" aria-label="Camera feed with hand detection overlay" id="cameraBox" style="display:none;">
+              <video id="video" autoplay playsinline muted aria-hidden="true"></video>
+              <canvas id="outputCanvas" class="output-canvas" aria-hidden="true"></canvas>
+              <div class="camera-status" id="cameraStatus" aria-live="polite">Camera off</div>
+            </div>
+
+            <!-- Camera off state (default view) -->
+            <div class="camera-off-state" id="cameraOffState">
+              <i class="ti ti-camera-off camera-off-icon" aria-hidden="true"></i>
+              <span>Camera is off</span>
+            </div>
+
+            <div class="controls">
+              <button id="startBtn" class="btn-green" onclick="startCamera()" aria-label="Start camera and begin hand detection">
+                <i class="ti ti-player-play" aria-hidden="true"></i>
+                <span id="startBtnLabel">Start Camera</span>
+              </button>
+              <button class="btn-red" onclick="stopCamera()" aria-label="Stop camera" id="btnStopCameraLabel">
+                <i class="ti ti-player-stop" aria-hidden="true"></i>
+                <span>Stop Camera</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:18px;">
+            <div class="sentence-box">
+              <div class="section-title" id="sentenceSectionTitle">Current Sentence</div>
+              <div class="sentence" id="sentenceText" role="textbox" aria-readonly="true" aria-label="Detected sentence text" aria-live="polite"></div>
+            </div>
+            <div class="controls" style="margin-top:12px;">
+              <button class="btn-secondary" onclick="addSpace()"       aria-label="Add space to sentence" id="btnAddSpace">
+                <i class="ti ti-space" aria-hidden="true"></i><span>Space</span>
+              </button>
+              <button class="btn-ghost" onclick="deleteLast()"     aria-label="Delete last character" id="btnDelete">
+                <i class="ti ti-backspace" aria-hidden="true"></i><span>Delete</span>
+              </button>
+              <button class="btn-danger" onclick="clearSentence()"  aria-label="Clear all sentence text" id="btnClear">
+                <i class="ti ti-trash" aria-hidden="true"></i><span>Clear</span>
+              </button>
+              <button class="btn-purple" onclick="speakSentence()"  aria-label="Read sentence aloud using text-to-speech" id="btnSpeak">
+                <i class="ti ti-volume" aria-hidden="true"></i><span>Speak</span>
+              </button>
+              <button class="btn-primary" onclick="saveToHistory()"  aria-label="Save current sentence to history" id="btnSave">
+                <i class="ti ti-device-floppy" aria-hidden="true"></i><span>Save</span>
+              </button>
+              <button id="autoSpeakBtn" class="btn-ghost" onclick="toggleAutoSpeak()" aria-label="Toggle automatic text-to-speech">Auto Speak: Off</button>
+            </div>
+            <div class="status" id="statusText" role="status" aria-live="polite">Ready</div>
+          </div>
+        </div>
+
+        <!-- Result + History Column -->
+        <div>
+          <div class="card">
+            <div class="result-main">
+              <div class="letter-label" id="labelCurrentLetter">Current Letter</div>
+              <!-- [7] Letter with animation wrapper -->
+              <div class="letter" id="currentLetter" aria-live="assertive" aria-label="Currently detected letter or word">-</div>
+              <div class="confidence" id="confidenceText">Confidence: -</div>
+
+              <!-- Confidence progress bar -->
+              <div class="confidence-bar-wrap" id="confidenceBarWrap" style="display:none;">
+                <div class="confidence-bar-track">
+                  <div class="confidence-bar-fill" id="confidenceBarFill"></div>
+                </div>
+                <div class="confidence-bar-label" id="confidenceBarLabel"></div>
+              </div>
+
+              <!-- Skeleton hint — shown when no hand detected -->
+              <div class="skeleton-hint" id="skeletonHint" aria-live="polite">
+                <svg class="skeleton-hint-hand" viewBox="0 0 120 130" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M35 80 Q30 95 32 110 Q35 120 50 122 Q65 124 75 118 Q88 110 87 95 L85 75" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                  <path d="M35 78 Q25 70 22 58 Q20 48 28 44 Q36 40 40 50 L42 68" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                  <path d="M45 72 Q44 55 46 40 Q48 28 54 26 Q60 24 62 36 L62 70" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                  <path d="M63 71 Q63 52 65 36 Q67 22 73 22 Q79 22 79 36 L78 70" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                  <path d="M79 72 Q80 55 81 42 Q83 30 88 31 Q93 32 92 46 L90 72" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                  <circle cx="46" cy="72" r="2.5" fill="currentColor" opacity="0.8"/>
+                  <circle cx="63" cy="71" r="2.5" fill="currentColor" opacity="0.8"/>
+                  <circle cx="79" cy="72" r="2.5" fill="currentColor" opacity="0.8"/>
+                </svg>
+                <span id="skeletonHintText">Place your hand in the frame to start detection</span>
+                <div class="hint-letters" aria-hidden="true">
+                  <span class="hint-letter">A</span>
+                  <span class="hint-letter">B</span>
+                  <span class="hint-letter">C</span>
+                </div>
+              </div>
+
+              <div class="result-main" style="margin-top:12px;">
+                <div class="letter-label" id="labelDynamicGesture">Dynamic Gesture</div>
+                <div class="letter" id="gestureResult" aria-live="polite">-</div>
+                <div class="confidence" id="gestureBadge"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:18px;">
+            <div class="section-title" id="historySectionTitle">History</div>
+            <div class="history" id="historyList" role="list" aria-label="Sentence history"></div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-home -->
+
+    <!-- ── CLIPS PAGE ── -->
+    <div class="page" id="page-clips">
+      <div class="clips-header">
+        <h1 id="clipsTitle">
+          <i class="ti ti-movie" aria-hidden="true"></i>
+          ASL Tutorial Clips
+        </h1>
+        <p id="clipsSubtitle">Video tutorials for ASL learners</p>
+      </div>
+
+      <div class="clips-grid" id="clipsGrid"></div>
+    </div><!-- /page-clips -->
+
+  </main>
+
+  <!-- [9] Mobile bottom tab bar -->
+  <nav class="mobile-tab-bar" aria-label="Mobile navigation" role="navigation">
+    <button class="mobile-tab active" id="mobileTabHome" onclick="goPage('home'); setMobileTab('home')" aria-label="Home page">
+      <i class="ti ti-home" aria-hidden="true"></i>
+      <span>Home</span>
+    </button>
+    <button class="mobile-tab" id="mobileTabClips" onclick="goPage('clips'); setMobileTab('clips')" aria-label="ASL Tutorial Clips">
+      <i class="ti ti-movie" aria-hidden="true"></i>
+      <span>ASL Clips</span>
+    </button>
+    <button class="mobile-tab" onclick="doLogout()" aria-label="Logout">
+      <i class="ti ti-logout" aria-hidden="true"></i>
+      <span>Log out</span>
+    </button>
+  </nav>
+
+</div><!-- /appShell -->
+
+<!-- Video Modal -->
+<div id="videoModal" role="dialog" aria-modal="true" aria-label="Video player">
+  <div class="video-modal-inner">
+    <div class="video-modal-header">
+      <div class="video-modal-title" id="modalVideoTitle">Video</div>
+      <button class="video-modal-close" onclick="closeVideoModal()" aria-label="Close video modal">
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </button>
+    </div>
+    <video id="modalVideo" controls aria-label="Video player"></video>
+    <iframe id="modalIframe"
+            style="display:none;width:100%;aspect-ratio:16/9;border:none;background:#000;max-height:68vh;"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowfullscreen
+            title="Embedded video player"
+            aria-label="Embedded video player"></iframe>
+    <div class="video-modal-controls">
+      <button class="btn-primary" onclick="modalVideoTogglePlay()" aria-label="Play or pause video" id="btnModalPlay">
+        <i class="ti ti-player-play" aria-hidden="true"></i> Play/Pause
+      </button>
+      <button class="btn-secondary" onclick="modalVideoFullscreen()" aria-label="Enter fullscreen mode" id="btnModalFullscreen">
+        <i class="ti ti-maximize" aria-hidden="true"></i> Fullscreen
+      </button>
+      <button class="btn-danger" onclick="closeVideoModal()" aria-label="Close video player" id="btnModalClose">
+        <i class="ti ti-x" aria-hidden="true"></i> Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Onboarding Modal -->
+<div id="onboardingModal" class="onboarding-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-label="Onboarding guide">
+  <div class="onboarding-box">
+    <div class="onboarding-steps">
+      <div class="onboarding-step active" data-step="0">
+        <i class="ti ti-hand-finger onboarding-icon" aria-hidden="true"></i>
+        <h2>Welcome to ASL Detector!</h2>
+        <p>This app uses AI and your webcam to detect ASL hand signs in real-time — including A–Z letters and dynamic gestures.</p>
+      </div>
+      <div class="onboarding-step" data-step="1">
+        <i class="ti ti-camera onboarding-icon" aria-hidden="true"></i>
+        <h2>How to get started</h2>
+        <p>Click <strong>▶ Start Camera</strong>, then place your hand inside the frame. The AI will detect and display letters automatically.</p>
+      </div>
+      <div class="onboarding-step" data-step="2">
+        <i class="ti ti-bolt onboarding-icon" aria-hidden="true"></i>
+        <h2>Detection modes</h2>
+        <p>Choose <strong>A–Z</strong> for letters, <strong>Dynamic</strong> for gestures, or <strong>Both</strong> to use all features at once.</p>
+      </div>
+      <div class="onboarding-step" data-step="3">
+        <i class="ti ti-device-floppy onboarding-icon" aria-hidden="true"></i>
+        <h2>Save and speak</h2>
+        <p>Detected text builds up in the sentence box. Click <strong>🔊 Speak</strong> to hear it, or <strong>💾 Save</strong> to keep it in history.</p>
+      </div>
+    </div>
+    <div class="onboarding-dots">
+      <span class="onboarding-dot active" data-dot="0"></span>
+      <span class="onboarding-dot" data-dot="1"></span>
+      <span class="onboarding-dot" data-dot="2"></span>
+      <span class="onboarding-dot" data-dot="3"></span>
+    </div>
+    <div class="onboarding-actions">
+      <button class="onboarding-skip" onclick="closeOnboarding()">Skip</button>
+      <button class="onboarding-next btn-primary" id="onboardingNextBtn" onclick="onboardingNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- demo panel script removed: demoLetter / demoBar elements do not exist in this build -->
+<script type="module" src="main.js"></script>
+
+<script>
+/* ──────────────────────────────────
+   [2] Landing Page logic — FIXED
+   - Landing shown when user is NOT logged in and hasn't seen it this session
+   - Uses sessionStorage (not localStorage) so it re-shows on new tabs
+   - Does NOT permanently hide the landing page
+   ────────────────────────────────── */
+function showLoginFromLanding() {
+  const landing = document.getElementById('landingPage');
+  const login   = document.getElementById('loginOverlay');
+  if (landing) landing.style.display = 'none';
+  if (login)   login.style.display   = 'flex';
+}
+window.showLoginFromLanding = showLoginFromLanding;
+
+
+
+/* initLanding fallback:
+   Do NOT force landing immediately on refresh.
+   Give Firebase auth observer a short moment to restore session.
+   If nothing is shown after that, show landing so the screen never goes blank. */
+(function initLanding() {
+  const landing = document.getElementById('landingPage');
+  const login   = document.getElementById('loginOverlay');
+  const app     = document.getElementById('appShell');
+
+  if (landing) landing.style.display = 'none';
+  if (login)   login.style.display   = 'none';
+  if (app)     app.style.display     = 'none';
+
+  /* If demo mode was active (same session), restore it immediately */
+  if (sessionStorage.getItem('asl_demo_mode') === '1') {
+    if (app) app.style.display = 'block';
+    return;
+  }
+
+  setTimeout(function () {
+    const appVisible = app && app.style.display !== 'none';
+    const loginVisible = login && login.style.display !== 'none';
+
+    if (!appVisible && !loginVisible && landing) {
+      landing.style.display = 'flex';
+    }
+  }, 700);
+})();
+
+/* ──────────────────────────────────
+   Theme Logo System
+   ────────────────────────────────── */
+function updateThemeLogos(isDark) {
+  document.querySelectorAll('.theme-logo').forEach(function(img) {
+    var next = isDark ? img.dataset.logoDark : img.dataset.logoLight;
+    if (!next) return;
+    // Normalise both paths for comparison (strip origin if absolute)
+    var current = img.src.replace(location.origin + '/', '').replace(/^\//, '');
+    var target  = next.replace(/^\//, '');
+    if (current === target) return;
+    img.classList.add('logo-swapping');
+    setTimeout(function() {
+      img.src = next;
+      img.classList.remove('logo-swapping');
+    }, 150);
+  });
+}
+
+function applyTheme(isDark) {
+  document.documentElement.classList.toggle('dark', isDark);
+  var icon = document.getElementById('darkToggleIcon');
+  if (icon) icon.className = isDark ? 'ti ti-sun' : 'ti ti-moon';
+  updateThemeLogos(isDark);
+}
+
+function toggleDarkMode() {
+  var isDark = !document.documentElement.classList.contains('dark');
+  localStorage.setItem('asl_dark_mode', isDark ? '1' : '0');
+  applyTheme(isDark);
+}
+window.toggleDarkMode = toggleDarkMode;
+window.applyTheme     = applyTheme;
+
+/* Init theme on page load — before paint to avoid flash */
+(function initTheme() {
+  var saved = localStorage.getItem('asl_dark_mode');
+  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(saved !== null ? saved === '1' : prefersDark);
+
+  /* Track system changes only when user has NOT manually chosen */
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+    if (localStorage.getItem('asl_dark_mode') === null) applyTheme(e.matches);
+  });
+})();
+
+/* ──────────────────────────────────
+   Mobile tab bar active state
+   ────────────────────────────────── */
+function setMobileTab(tab) {
+  document.querySelectorAll('.mobile-tab').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('mobileTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+  if (el) el.classList.add('active');
+}
+window.setMobileTab = setMobileTab;
+
+/* ──────────────────────────────────
+   Onboarding Modal
+   ────────────────────────────────── */
+let _onboardStep = 0;
+const _onboardTotal = 4;
+
+function showOnboarding() {
+  const el = document.getElementById('onboardingModal');
+  if (el) el.style.display = 'flex';
+  _onboardStep = 0;
+  _updateOnboardStep();
+}
+function closeOnboarding() {
+  const el = document.getElementById('onboardingModal');
+  if (el) el.style.display = 'none';
+  localStorage.setItem('asl_onboarded', '1');
+}
+function onboardingNext() {
+  _onboardStep++;
+  if (_onboardStep >= _onboardTotal) { closeOnboarding(); return; }
+  _updateOnboardStep();
+}
+function _updateOnboardStep() {
+  document.querySelectorAll('.onboarding-step').forEach((s, i) =>
+    s.classList.toggle('active', i === _onboardStep)
+  );
+  document.querySelectorAll('.onboarding-dot').forEach((d, i) =>
+    d.classList.toggle('active', i === _onboardStep)
+  );
+  const btn = document.getElementById('onboardingNextBtn');
+  if (btn) btn.textContent = _onboardStep === _onboardTotal - 1 ? 'Get started 🚀' : 'Next →';
+}
+window.showOnboarding  = showOnboarding;
+window.closeOnboarding = closeOnboarding;
+window.onboardingNext  = onboardingNext;
+
+window.__onAppReady__ = function() {
+  if (!localStorage.getItem('asl_onboarded')) {
+    setTimeout(showOnboarding, 600);
+  }
+};
+
+/* ──────────────────────────────────
+   Floating Result Bar — synced from #currentLetter / #confidenceText
+   ────────────────────────────────── */
+(function initFloatingResultBar() {
+  const frbLetter   = document.getElementById('frbLetter');
+  const frbConf     = document.getElementById('frbConf');
+  const frbBarTrack = document.getElementById('frbBarTrack');
+  const frbBarFill  = document.getElementById('frbBarFill');
+  const frbLabel    = document.getElementById('frbLabel');
+
+  // ── Observe #currentLetter changes ──
+  const srcLetter = document.getElementById('currentLetter');
+  if (srcLetter && frbLetter) {
+    new MutationObserver(() => {
+      const val = srcLetter.textContent || '-';
+      frbLetter.textContent = val;
+      // Pop animation
+      frbLetter.classList.remove('pop');
+      void frbLetter.offsetWidth;
+      if (val && val !== '-') {
+        frbLetter.classList.add('pop');
+        setTimeout(() => frbLetter.classList.remove('pop'), 200);
+      }
+    }).observe(srcLetter, { characterData: true, childList: true, subtree: true });
+  }
+
+  // ── Observe #confidenceText changes ──
+  const srcConf = document.getElementById('confidenceText');
+  if (srcConf && frbConf) {
+    new MutationObserver(() => {
+      frbConf.textContent = srcConf.textContent || 'Confidence: -';
+    }).observe(srcConf, { characterData: true, childList: true, subtree: true });
+  }
+
+  // ── Observe confidence bar fill width ──
+  const srcFill = document.getElementById('confidenceBarFill');
+  const srcWrap = document.getElementById('confidenceBarWrap');
+  if (srcFill && frbBarFill) {
+    new MutationObserver(() => {
+      if (srcWrap && srcWrap.style.display === 'none') {
+        if (frbBarTrack) frbBarTrack.style.display = 'none';
+        return;
+      }
+      if (frbBarTrack) frbBarTrack.style.display = 'block';
+      frbBarFill.style.width      = srcFill.style.width      || '0%';
+      frbBarFill.style.background = srcFill.style.background || 'var(--accent)';
+    }).observe(srcFill, { attributes: true, attributeFilter: ['style'] });
+
+    if (srcWrap) {
+      new MutationObserver(() => {
+        if (frbBarTrack) frbBarTrack.style.display =
+          srcWrap.style.display === 'none' ? 'none' : 'block';
+      }).observe(srcWrap, { attributes: true, attributeFilter: ['style'] });
+    }
+  }
+
+  // ── Sync label text on language change ──
+  const srcLabelEl = document.getElementById('labelCurrentLetter');
+  if (srcLabelEl && frbLabel) {
+    new MutationObserver(() => {
+      frbLabel.textContent = srcLabelEl.textContent || 'Letter';
+    }).observe(srcLabelEl, { characterData: true, childList: true, subtree: true });
+    // Initial sync
+    frbLabel.textContent = srcLabelEl.textContent || 'Letter';
+  }
+})();
+</script>
+</body>
+</html>
