@@ -19,7 +19,7 @@ const CLIPS = [
   {
     section: "ASL Lessons",
     name: "A - Z",          // ← rename freely
-    url:  "https://youtu.be/rHUfMxe-9nc",
+    url:  "https://www.youtube.com/watch?v=LC-h5GdhT2k",
     type: "youtube",
   },
   {
