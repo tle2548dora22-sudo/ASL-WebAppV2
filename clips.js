@@ -23,7 +23,7 @@ const CLIPS = [
     type: "youtube",
   },
   {
-    name: "ASL Tutorial 2",          // ← rename freely
+    name: "Basic Sentence",          // ← rename freely
     url:  "https://www.youtube.com/watch?v=N5HxbW_OcJI",
     type: "youtube",
   },
