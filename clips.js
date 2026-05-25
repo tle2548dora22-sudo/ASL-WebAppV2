@@ -24,7 +24,7 @@ const CLIPS = [
   },
   {
     name: "Basic Sentence",          // ← rename freely
-    url:  "https://www.youtube.com/watch?v=N5HxbW_OcJI",
+    url:  "https://www.youtube.com/watch?v=S_wnWXeIzAg",
     type: "youtube",
   },
   {
