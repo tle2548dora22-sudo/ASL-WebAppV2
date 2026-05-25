@@ -89,12 +89,12 @@ export const T = {
 
     /* mode */
     modeLabel:          "Mode:",
-    modeStatic:         "🔤 A–Z",
-    modeDynamic:        "🤟 Dynamic",
-    modeBoth:           "⚡ Both",
+    modeStatic:         "  A–Z",
+    modeDynamic:        "  Words",
+    modeBoth:           "  Both",
     modeStatusStatic:   "Mode: A–Z only",
-    modeStatusDynamic:  "Mode: Dynamic only",
-    modeStatusBoth:     "Mode: A–Z + Dynamic",
+    modeStatusDynamic:  "Mode: Words only",
+    modeStatusBoth:     "Mode: A–Z + Words",
 
     /* confidence bar */
     confidence:         "Confidence",
